@@ -4,24 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Download dos Arquivos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
         }
-        iframe {
+
+        #content-container {
             width: 100%;
-            min-height: 100vh; /* Altura mínima para preencher a tela */
-            height: auto;
-            border: none;
-            display: block;
+            max-width: 600px;
+            margin: auto;
+        }
+        
+        #loading-message {
+            text-align: center;
+            font-size: 18px;
+            color: #555;
+        }
+
+        #error-message {
+            display: none;
+            color: red;
+            text-align: center;
+            font-size: 18px;
+            margin: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body>
-    <iframe id="appsScriptFrame" frameborder="0"></iframe>
+    <div id="loading-message">Carregando...</div>
+    <div id="error-message"></div>
+    <div id="content-container"></div>
 
     <script>
         function getQueryParam(param) {
@@ -29,22 +54,44 @@
             return urlParams.get(param);
         }
 
-        const appsScriptLink = getQueryParam('link');
-        const iframe = document.getElementById('appsScriptFrame');
+        async function loadContent() {
+            const appsScriptLink = getQueryParam('link');
+            const container = document.getElementById('content-container');
+            const loading = document.getElementById('loading-message');
+            const error = document.getElementById('error-message');
 
-        if (appsScriptLink) {
-            const decodedLink = decodeURIComponent(appsScriptLink);
-            iframe.src = decodedLink;
-        } else {
-            console.error("Nenhum link do Apps Script encontrado na URL.");
+            if (!appsScriptLink) {
+                loading.style.display = 'none';
+                error.style.display = 'block';
+                error.textContent = "Erro: Nenhum link válido foi fornecido. Acesse a página via o link do e-mail.";
+                return;
+            }
+
+            try {
+                const response = await fetch(decodeURIComponent(appsScriptLink));
+                if (!response.ok) {
+                    throw new Error('Falha ao carregar a página.');
+                }
+                const html = await response.text();
+                
+                // Extrai apenas o conteúdo do corpo da página do Apps Script
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const content = doc.querySelector('.container').innerHTML;
+                
+                // Injeta o conteúdo no nosso container
+                container.innerHTML = content;
+                loading.style.display = 'none';
+
+            } catch (err) {
+                console.error("Erro ao carregar o conteúdo:", err);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+                error.textContent = "Erro: Não foi possível carregar o conteúdo. Verifique o link ou a conexão.";
+            }
         }
 
-        // Script para redimensionar o iframe com base na altura da página filha
-        window.addEventListener('message', function(event) {
-            if (event.data.height) {
-                iframe.style.height = event.data.height + 'px';
-            }
-        });
+        window.onload = loadContent;
     </script>
 </body>
 </html>
