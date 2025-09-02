@@ -10,10 +10,11 @@
             padding: 0;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
+            overflow: hidden;
         }
         iframe {
             width: 100%;
-            min-height: 100vh; /* Altura mínima para preencher a tela */
+            min-height: 100vh;
             height: auto;
             border: none;
             display: block;
@@ -29,22 +30,28 @@
             return urlParams.get(param);
         }
 
-        const appsScriptLink = getQueryParam('link');
-        const iframe = document.getElementById('appsScriptFrame');
-
-        if (appsScriptLink) {
-            const decodedLink = decodeURIComponent(appsScriptLink);
-            iframe.src = decodedLink;
+        const pedido = getQueryParam('pedido');
+        const email = getQueryParam('email');
+        
+        // ID da sua Web App (ele está no código, mas a URL enviada ao cliente é curta)
+        const webAppId = 'AKfycbx5zV99NsBVU5-2yfpsTA8PsmmU_KDkY1MYr9dkH1ASUL0_pVJbBLO5n_16BxxWdOh1';
+        
+        if (pedido && email) {
+            // Constrói a URL do Apps Script aqui, no navegador do cliente
+            const urlAppsScript = `https://script.google.com/macros/s/${webAppId}/exec?pedido=${encodeURIComponent(pedido)}&email=${encodeURIComponent(email)}`;
+            const iframe = document.getElementById('appsScriptFrame');
+            iframe.src = urlAppsScript;
+            
+            // Script para redimensionar o iframe com base na altura da página filha
+            window.addEventListener('message', function(event) {
+                if (event.data.height) {
+                    iframe.style.height = event.data.height + 'px';
+                }
+            });
         } else {
-            console.error("Nenhum link do Apps Script encontrado na URL.");
+            // Exibe uma mensagem de erro se os parâmetros estiverem faltando
+            document.body.innerHTML = '<h1>Erro: Parâmetros faltando.</h1>';
         }
-
-        // Script para redimensionar o iframe com base na altura da página filha
-        window.addEventListener('message', function(event) {
-            if (event.data.height) {
-                iframe.style.height = event.data.height + 'px';
-            }
-        });
     </script>
 </body>
 </html>
