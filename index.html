@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Download dos Arquivos</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        iframe {
+            width: 100%;
+            min-height: 100vh; /* Altura mínima para preencher a tela */
+            height: auto;
+            border: none;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <iframe id="appsScriptFrame" frameborder="0"></iframe>
+
+    <script>
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        const appsScriptLink = getQueryParam('link');
+        const iframe = document.getElementById('appsScriptFrame');
+
+        if (appsScriptLink) {
+            const decodedLink = decodeURIComponent(appsScriptLink);
+            iframe.src = decodedLink;
+        } else {
+            console.error("Nenhum link do Apps Script encontrado na URL.");
+        }
+
+        // Script para redimensionar o iframe com base na altura da página filha
+        window.addEventListener('message', function(event) {
+            if (event.data.height) {
+                iframe.style.height = event.data.height + 'px';
+            }
+        });
+    </script>
+</body>
+</html>
