@@ -17,11 +17,36 @@
             min-height: 100vh;
             height: auto;
             border: none;
-            display: block;
+            display: none; /* Inicialmente escondido até carregar */
+        }
+        /* Estilo para o loading */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-size: 18px;
+            color: #2d3436;
+            font-family: 'Poppins', sans-serif; /* Mesma fonte do Apps Script */
+        }
+        #loading i {
+            margin-right: 10px;
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
+    <!-- Elemento de loading -->
+    <div id="loading">
+        <i class="fas fa-spinner fa-spin"></i> Carregando dados... Por favor, aguarde
+    </div>
     <iframe id="appsScriptFrame" frameborder="0"></iframe>
 
     <script>
@@ -33,14 +58,20 @@
         const pedido = getQueryParam('pedido');
         const email = getQueryParam('email');
         
-        // ID da sua Web App (ele está no código, mas a URL enviada ao cliente é curta)
+        // ID da sua Web App
         const webAppId = 'AKfycbx5zV99NsBVU5-2yfpsTA8PsmmU_KDkY1MYr9dkH1ASUL0_pVJbBLO5n_16BxxWdOh1';
         
         if (pedido && email) {
-            // Constrói a URL do Apps Script aqui, no navegador do cliente
+            // Constrói a URL do Apps Script
             const urlAppsScript = `https://script.google.com/macros/s/${webAppId}/exec?pedido=${encodeURIComponent(pedido)}&email=${encodeURIComponent(email)}`;
             const iframe = document.getElementById('appsScriptFrame');
             iframe.src = urlAppsScript;
+            
+            // Quando o iframe carregar, esconde o loading e mostra o iframe
+            iframe.onload = function() {
+                document.getElementById('loading').style.display = 'none';
+                iframe.style.display = 'block';
+            };
             
             // Script para redimensionar o iframe com base na altura da página filha
             window.addEventListener('message', function(event) {
@@ -50,6 +81,7 @@
             });
         } else {
             // Exibe uma mensagem de erro se os parâmetros estiverem faltando
+            document.getElementById('loading').style.display = 'none';
             document.body.innerHTML = '<h1>Erro: Parâmetros faltando.</h1>';
         }
     </script>
