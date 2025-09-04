@@ -63,7 +63,7 @@
         
         if (pedido && email) {
             // Constrói a URL do Apps Script
-            const urlAppsScript = `https://script.google.com/macros/s/${webAppId}/exec?order=${encodeURIComponent(order)}&email=${encodeURIComponent(email)}`;
+            const urlAppsScript = `https://script.google.com/macros/s/${webAppId}/exec?order=${encodeURIComponent(pedido)}&email=${encodeURIComponent(email)}`;
             const iframe = document.getElementById('appsScriptFrame');
             iframe.src = urlAppsScript;
             
