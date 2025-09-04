@@ -55,7 +55,7 @@
             return urlParams.get(param);
         }
 
-        const pedido = getQueryParam('pedido');
+        const pedido = getQueryParam('order');
         const email = getQueryParam('email');
         
         // ID da sua Web App
@@ -63,7 +63,7 @@
         
         if (pedido && email) {
             // Constrói a URL do Apps Script
-            const urlAppsScript = `https://script.google.com/macros/s/${webAppId}/exec?pedido=${encodeURIComponent(pedido)}&email=${encodeURIComponent(email)}`;
+            const urlAppsScript = `https://script.google.com/macros/s/${webAppId}/exec?order=${encodeURIComponent(order)}&email=${encodeURIComponent(email)}`;
             const iframe = document.getElementById('appsScriptFrame');
             iframe.src = urlAppsScript;
             
