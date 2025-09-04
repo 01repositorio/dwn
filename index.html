@@ -61,7 +61,7 @@
         // ID da sua Web App
         const webAppId = 'AKfycbx5zV99NsBVU5-2yfpsTA8PsmmU_KDkY1MYr9dkH1ASUL0_pVJbBLO5n_16BxxWdOh1';
         
-        if (pedido && email) {
+        if (order && email) {
             // Constrói a URL do Apps Script
             const urlAppsScript = `https://script.google.com/macros/s/${webAppId}/exec?order=${encodeURIComponent(order)}&email=${encodeURIComponent(email)}`;
             const iframe = document.getElementById('appsScriptFrame');
