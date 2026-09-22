@@ -315,18 +315,7 @@
       iframe.src =
         webAppUrl.toString();
 
-
-      iframe.addEventListener(
-        "load",
-        function () {
-
-          loading.style.display =
-            "none";
-
-          iframe.style.display =
-            "block";
-        }
-      );
+      
     }
 
 
@@ -342,44 +331,68 @@
     window.addEventListener(
       "message",
       function (event) {
-
+    
+        // Aceitamos mensagens somente da janela
+        // realmente carregada no iframe.
         if (
           event.source !==
           iframe.contentWindow
         ) {
           return;
         }
-
-
+    
         const data =
           event.data;
-
-
+    
         if (
           !data ||
-          typeof data !==
-            "object" ||
-          data.type !==
-            "PLANILHAS_RESIZE"
+          typeof data !== "object"
         ) {
           return;
         }
-
-
+    
+    
+        // ========================================================
+        // APPS SCRIPT TERMINOU A CONSULTA INICIAL
+        // ========================================================
+    
+        if (
+          data.type ===
+          "PLANILHAS_READY"
+        ) {
+    
+          loading.style.display =
+            "none";
+    
+          iframe.style.display =
+            "block";
+    
+          return;
+        }
+    
+    
+        // ========================================================
+        // AJUSTE DE ALTURA
+        // ========================================================
+    
+        if (
+          data.type !==
+          "PLANILHAS_RESIZE"
+        ) {
+          return;
+        }
+    
         const height =
           Number(
             data.height
           );
-
-
+    
         if (
           !Number.isFinite(height)
         ) {
           return;
         }
-
-
-        // Limites defensivos contra valores absurdos.
+    
         const safeHeight =
           Math.max(
             400,
@@ -388,8 +401,7 @@
               50000
             )
           );
-
-
+    
         iframe.style.height =
           safeHeight + "px";
       }
