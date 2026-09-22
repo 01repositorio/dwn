@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="referrer"
+    content="no-referrer"
+  >
+
+  <!--
+    Política propositalmente restritiva.
+    O wrapper não precisa de bibliotecas externas.
+  -->
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="
+      default-src 'none';
+      script-src 'unsafe-inline';
+      style-src 'unsafe-inline';
+      frame-src https://script.google.com https://*.googleusercontent.com;
+      base-uri 'none';
+      form-action 'none';
+    "
+  >
+
+  <title>Entrega da sua planilha</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: #f5f6f8;
+    }
+
+    body {
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+
+      color: #24272b;
+
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    #loading {
+      min-height: 100vh;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      padding: 30px;
+
+      text-align: center;
+      color: #646970;
+    }
+
+    .spinner {
+      width: 34px;
+      height: 34px;
+
+      margin-bottom: 15px;
+
+      border: 3px solid #dedfe2;
+      border-top-color: #e66a00;
+      border-radius: 50%;
+
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #error {
+      display: none;
+
+      max-width: 650px;
+
+      margin: 70px auto;
+      padding: 25px;
+
+      background: #ffffff;
+
+      border:
+        1px solid #e5e6e8;
+
+      border-radius: 14px;
+
+      text-align: center;
+    }
+
+    #error h1 {
+      margin-top: 0;
+      font-size: 23px;
+    }
+
+    #error p {
+      margin-bottom: 0;
+      color: #666b71;
+    }
+
+    #appsScriptFrame {
+      display: none;
+
+      width: 100%;
+      min-height: 100vh;
+
+      border: 0;
+
+      background: #f5f6f8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="loading">
+    <div class="spinner"></div>
+
+    <div>
+      Carregando sua entrega...
+    </div>
+  </div>
+
+
+  <div id="error">
+
+    <h1>
+      Link inválido
+    </h1>
+
+    <p>
+      Não foi possível localizar os dados
+      necessários para abrir esta entrega.
+    </p>
+
+  </div>
+
+
+  <iframe
+    id="appsScriptFrame"
+    title="Entrega da planilha"
+    referrerpolicy="no-referrer"
+  ></iframe>
+
+
+  <script>
+    "use strict";
+
+
+    /* ========================================================
+       CONFIGURAÇÃO
+       ======================================================== */
+
+    const APPS_SCRIPT_URL =
+      "https://script.google.com/macros/s/AKfycbyP5S6QDGMISVUp6y61beSSVBGsRMLZF1C0oaaAHDRffbxJltoZzjhCE7TMnjlYhWSoCw/exec";
+
+
+    /* ========================================================
+       ELEMENTOS
+       ======================================================== */
+
+    const iframe =
+      document.getElementById(
+        "appsScriptFrame"
+      );
+
+    const loading =
+      document.getElementById(
+        "loading"
+      );
+
+    const errorBox =
+      document.getElementById(
+        "error"
+      );
+
+
+    /* ========================================================
+       TOKEN
+
+       URL pública:
+
+       download.html#v=TOKEN
+
+       Fragmentos não são enviados ao servidor do GitHub.
+       ======================================================== */
+
+    function getTokenFromFragment() {
+
+      const raw =
+        window.location.hash
+          ? window.location.hash.slice(1)
+          : "";
+
+      if (!raw) {
+        return "";
+      }
+
+      const params =
+        new URLSearchParams(raw);
+
+      const token =
+        String(
+          params.get("v") || ""
+        )
+          .trim()
+          .toLowerCase();
+
+
+      if (
+        !/^[a-f0-9]{64}$/.test(
+          token
+        )
+      ) {
+        return "";
+      }
+
+      return token;
+    }
+
+
+    /* ========================================================
+       ERRO
+       ======================================================== */
+
+    function showError() {
+
+      loading.style.display =
+        "none";
+
+      iframe.style.display =
+        "none";
+
+      errorBox.style.display =
+        "block";
+    }
+
+
+    /* ========================================================
+       INICIALIZAÇÃO
+       ======================================================== */
+
+    function initialize() {
+
+      const token =
+        getTokenFromFragment();
+
+
+      if (!token) {
+
+        showError();
+
+        return;
+      }
+
+
+      let webAppUrl;
+
+      try {
+
+        webAppUrl =
+          new URL(
+            APPS_SCRIPT_URL
+          );
+
+      } catch (e) {
+
+        showError();
+
+        return;
+      }
+
+
+      if (
+        webAppUrl.protocol !==
+          "https:" ||
+        webAppUrl.hostname !==
+          "script.google.com"
+      ) {
+
+        showError();
+
+        return;
+      }
+
+
+      webAppUrl.searchParams.set(
+        "v",
+        token
+      );
+
+
+      iframe.src =
+        webAppUrl.toString();
+
+
+      iframe.addEventListener(
+        "load",
+        function () {
+
+          loading.style.display =
+            "none";
+
+          iframe.style.display =
+            "block";
+        }
+      );
+    }
+
+
+    /* ========================================================
+       AJUSTE DE ALTURA
+
+       Além do tipo da mensagem, verificamos que ela realmente
+       veio da janela carregada dentro deste iframe.
+
+       Não aceitamos simplesmente qualquer postMessage da página.
+       ======================================================== */
+
+    window.addEventListener(
+      "message",
+      function (event) {
+
+        if (
+          event.source !==
+          iframe.contentWindow
+        ) {
+          return;
+        }
+
+
+        const data =
+          event.data;
+
+
+        if (
+          !data ||
+          typeof data !==
+            "object" ||
+          data.type !==
+            "PLANILHAS_RESIZE"
+        ) {
+          return;
+        }
+
+
+        const height =
+          Number(
+            data.height
+          );
+
+
+        if (
+          !Number.isFinite(height)
+        ) {
+          return;
+        }
+
+
+        // Limites defensivos contra valores absurdos.
+        const safeHeight =
+          Math.max(
+            400,
+            Math.min(
+              Math.ceil(height),
+              50000
+            )
+          );
+
+
+        iframe.style.height =
+          safeHeight + "px";
+      }
+    );
+
+
+    initialize();
+  </script>
+
+</body>
+</html>
