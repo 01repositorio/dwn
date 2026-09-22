@@ -168,6 +168,33 @@
   <script>
     "use strict";
 
+    function createBridgeKey() {
+
+      const bytes =
+        new Uint8Array(32);
+    
+      crypto.getRandomValues(
+        bytes
+      );
+    
+      return Array.from(
+        bytes,
+        function (value) {
+          return value
+            .toString(16)
+            .padStart(2, "0");
+        }
+      ).join("");
+    }
+    
+    
+    const BRIDGE_KEY =
+      createBridgeKey();
+    
+    
+    let readyTimeoutId =
+      null;
+
 
     /* ========================================================
        CONFIGURAÇÃO
@@ -311,9 +338,56 @@
         token
       );
 
+      webAppUrl.searchParams.set(
+        "b",
+        BRIDGE_KEY
+      );
+
 
       iframe.src =
         webAppUrl.toString();
+
+      readyTimeoutId =
+        setTimeout(
+          function () {
+      
+            /*
+             * Não deixa o comprador preso eternamente
+             * no carregamento caso ocorra alguma falha
+             * inesperada de comunicação.
+             */
+            loading.style.display =
+              "none";
+      
+            iframe.style.display =
+              "none";
+      
+            errorBox.style.display =
+              "block";
+      
+            const title =
+              errorBox.querySelector(
+                "h1"
+              );
+      
+            const text =
+              errorBox.querySelector(
+                "p"
+              );
+      
+            if (title) {
+              title.textContent =
+                "Não foi possível carregar";
+            }
+      
+            if (text) {
+              text.textContent =
+                "Não foi possível abrir esta entrega no momento. Tente novamente em alguns instantes.";
+            }
+      
+          },
+          20000
+        );
 
       
     }
@@ -332,21 +406,26 @@
       "message",
       function (event) {
     
-        // Aceitamos mensagens somente da janela
-        // realmente carregada no iframe.
-        if (
-          event.source !==
-          iframe.contentWindow
-        ) {
-          return;
-        }
-    
         const data =
           event.data;
+    
     
         if (
           !data ||
           typeof data !== "object"
+        ) {
+          return;
+        }
+    
+    
+        /*
+         * A mensagem só pertence a esta abertura
+         * da página se possuir exatamente a chave
+         * aleatória criada por este wrapper.
+         */
+        if (
+          typeof data.bridge !== "string" ||
+          data.bridge !== BRIDGE_KEY
         ) {
           return;
         }
@@ -360,6 +439,20 @@
           data.type ===
           "PLANILHAS_READY"
         ) {
+    
+          if (readyTimeoutId) {
+    
+            clearTimeout(
+              readyTimeoutId
+            );
+    
+            readyTimeoutId =
+              null;
+          }
+    
+    
+          errorBox.style.display =
+            "none";
     
           loading.style.display =
             "none";
@@ -382,16 +475,19 @@
           return;
         }
     
+    
         const height =
           Number(
             data.height
           );
+    
     
         if (
           !Number.isFinite(height)
         ) {
           return;
         }
+    
     
         const safeHeight =
           Math.max(
@@ -401,6 +497,7 @@
               50000
             )
           );
+    
     
         iframe.style.height =
           safeHeight + "px";
